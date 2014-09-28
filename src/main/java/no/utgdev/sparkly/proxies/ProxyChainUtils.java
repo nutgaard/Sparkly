@@ -1,7 +1,7 @@
-package no.utgdev;
+package no.utgdev.sparkly.proxies;
 
-import no.utgdev.annotations.ProxyAnnotation;
-import no.utgdev.proxy.ProxyFactory;
+import no.utgdev.sparkly.annotations.interceptors.ProxyAnnotation;
+import no.utgdev.sparkly.factories.ProxyFactory;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 

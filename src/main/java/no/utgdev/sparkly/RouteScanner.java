@@ -1,10 +1,12 @@
-package no.utgdev;
+package no.utgdev.sparkly;
 
-import no.utgdev.annotations.Delete;
-import no.utgdev.annotations.Get;
-import no.utgdev.annotations.Page;
-import no.utgdev.annotations.Post;
-import no.utgdev.annotations.Put;
+import no.utgdev.sparkly.annotations.wsrs.Delete;
+import no.utgdev.sparkly.annotations.wsrs.Get;
+import no.utgdev.sparkly.annotations.wsrs.Page;
+import no.utgdev.sparkly.annotations.wsrs.Post;
+import no.utgdev.sparkly.annotations.wsrs.Put;
+import no.utgdev.sparkly.proxies.ProxyChain;
+import no.utgdev.sparkly.proxies.ProxyChainUtils;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import spark.Route;

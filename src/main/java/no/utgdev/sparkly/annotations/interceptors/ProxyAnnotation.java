@@ -1,7 +1,7 @@
-package no.utgdev.annotations;
+package no.utgdev.sparkly.annotations.interceptors;
 
-import no.utgdev.proxy.DefaulProxyFactory;
-import no.utgdev.proxy.ProxyFactory;
+import no.utgdev.sparkly.factories.DefaulProxyFactory;
+import no.utgdev.sparkly.factories.ProxyFactory;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

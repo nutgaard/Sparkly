@@ -1,7 +1,7 @@
 package no.utgdev.page;
 
-import no.utgdev.annotations.Get;
-import no.utgdev.annotations.Page;
+import no.utgdev.sparkly.annotations.wsrs.Get;
+import no.utgdev.sparkly.annotations.wsrs.Page;
 import spark.Request;
 import spark.Response;
 

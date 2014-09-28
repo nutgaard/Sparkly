@@ -1,4 +1,4 @@
-package no.utgdev.proxy;
+package no.utgdev.sparkly.factories;
 
 import org.slf4j.Logger;
 import spark.Route;

@@ -1,6 +1,6 @@
-package no.utgdev.annotations;
+package no.utgdev.sparkly.annotations.interceptors;
 
-import no.utgdev.proxy.LoggingProxy;
+import no.utgdev.sparkly.factories.LoggingProxy;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

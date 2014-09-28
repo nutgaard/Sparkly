@@ -1,6 +1,6 @@
-package no.utgdev;
+package no.utgdev.sparkly.proxies;
 
-import no.utgdev.proxy.ProxyFactory;
+import no.utgdev.sparkly.factories.ProxyFactory;
 
 import java.util.ArrayList;
 import java.util.List;

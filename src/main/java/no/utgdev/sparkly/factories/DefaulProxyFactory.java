@@ -1,4 +1,4 @@
-package no.utgdev.proxy;
+package no.utgdev.sparkly.factories;
 
 public class DefaulProxyFactory implements ProxyFactory {
 
