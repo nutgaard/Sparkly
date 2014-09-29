@@ -1,4 +1,4 @@
-package no.utgdev.sparkly.factories;
+package no.utgdev.sparkly.proxyimpl.mocking;
 
 import no.utgdev.sparkly.proxies.ProxyFactory;
 

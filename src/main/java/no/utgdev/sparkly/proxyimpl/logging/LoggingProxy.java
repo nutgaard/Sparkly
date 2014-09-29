@@ -1,4 +1,4 @@
-package no.utgdev.sparkly.factories;
+package no.utgdev.sparkly.proxyimpl.logging;
 
 import no.utgdev.sparkly.proxies.ProxyFactory;
 import org.slf4j.Logger;

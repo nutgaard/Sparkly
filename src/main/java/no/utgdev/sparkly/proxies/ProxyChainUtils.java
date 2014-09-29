@@ -1,7 +1,8 @@
 package no.utgdev.sparkly.proxies;
 
-import no.utgdev.sparkly.annotations.interceptors.Mocking;
-import no.utgdev.sparkly.annotations.interceptors.ProxyAnnotation;
+import no.utgdev.sparkly.annotations.AnnotationProcessor;
+import no.utgdev.sparkly.annotations.AnnotationProcessorRegistry;
+import no.utgdev.sparkly.annotations.ProxyAnnotation;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 
@@ -37,14 +38,18 @@ public class ProxyChainUtils {
     private static List<ProxySetup> findAnnotations(Object instance, Method m) {
         Class instanceClass = instance.getClass();
         List<ProxySetup> present = new ArrayList<>();
-
+        AnnotationProcessorRegistry registry = AnnotationProcessorRegistry.getInstance();
         for (Entry<Class<? extends Annotation>, ProxyFactory> entry : proxyFactoryMap.entrySet()) {
             Class<? extends Annotation> proxyFactoryAnnotation = entry.getKey();
 
 
             if (instanceClass.isAnnotationPresent(proxyFactoryAnnotation)) {
-                ProxyConfiguration configurationClass = getConfigurationClass(instance, proxyFactoryAnnotation);
-                present.add(new ProxySetup(proxyFactoryMap.get(proxyFactoryAnnotation), configurationClass));
+                AnnotationProcessor processor = registry.getForAnnotation(proxyFactoryAnnotation);
+                ProxyConfiguration configurator = null;
+                if (processor != null && proxyFactoryAnnotation.equals(processor.accepts())) {
+                    configurator = processor.process(instance.getClass().getAnnotation(proxyFactoryAnnotation));
+                }
+                present.add(new ProxySetup(proxyFactoryMap.get(proxyFactoryAnnotation), configurator));
             }
             if (m.isAnnotationPresent(proxyFactoryAnnotation)) {
                 present.add(new ProxySetup(proxyFactoryMap.get(proxyFactoryAnnotation), null));
@@ -53,20 +58,10 @@ public class ProxyChainUtils {
         return present;
     }
 
-    private static ProxyConfiguration getConfigurationClass(Object instance, Class<? extends Annotation> annotation) {
-        try {
-            annotation.getDeclaredMethod("configuringClass", new Class[]{});
-            Class<? extends ProxyConfiguration> configurationClass = ((Mocking) instance.getClass().getAnnotation(annotation)).configuringClass();
-            return configurationClass.newInstance();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     @SuppressWarnings("unchecked")
     private static void checkForAnnotations() throws IllegalAccessException, InstantiationException {
         if (proxyFactoryMap == null) {
-            String path = ProxyAnnotation.class.getPackage().getName();
+            String path = "";
             logger.debug("Search path " + path + " for proxy annotations.");
             Reflections reflection = new Reflections(path);
             Set<Class<?>> proxyAnnotations = reflection.getTypesAnnotatedWith(ProxyAnnotation.class);

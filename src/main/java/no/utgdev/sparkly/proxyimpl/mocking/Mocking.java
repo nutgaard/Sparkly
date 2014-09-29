@@ -1,7 +1,7 @@
-package no.utgdev.sparkly.annotations.interceptors;
+package no.utgdev.sparkly.proxyimpl.mocking;
 
-import no.utgdev.sparkly.factories.DefaultProxyConfiguration;
-import no.utgdev.sparkly.factories.MockingProxy;
+import no.utgdev.sparkly.annotations.ProxyAnnotation;
+import no.utgdev.sparkly.proxyimpl.DefaultProxyConfiguration;
 import no.utgdev.sparkly.proxies.ProxyConfiguration;
 
 import java.lang.annotation.ElementType;

@@ -1,7 +1,7 @@
-package no.utgdev.sparkly.annotations.interceptors;
+package no.utgdev.sparkly.annotations;
 
-import no.utgdev.sparkly.factories.DefaultProxyConfiguration;
-import no.utgdev.sparkly.factories.DefaultProxyFactory;
+import no.utgdev.sparkly.proxyimpl.DefaultProxyConfiguration;
+import no.utgdev.sparkly.proxyimpl.DefaultProxyFactory;
 import no.utgdev.sparkly.proxies.ProxyFactory;
 import no.utgdev.sparkly.proxies.ProxyConfiguration;
 
