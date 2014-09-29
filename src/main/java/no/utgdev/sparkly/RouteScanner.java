@@ -66,7 +66,7 @@ public class RouteScanner {
                 .map((mp) -> {
                     Method m = (Method) mp[0];
                     Route route = (Route) mp[1];
-                    ProxyChain pc = ProxyChainUtils.createProxyChainFromAnnotations(instance.getClass(), m);
+                    ProxyChain pc = ProxyChainUtils.createProxyChainFromAnnotations(instance, m);
                     return pc.build(route, Route.class);
                 });
     }

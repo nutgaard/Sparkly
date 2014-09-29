@@ -1,7 +1,7 @@
 package no.utgdev.sparkly.proxies;
 
+import no.utgdev.sparkly.annotations.interceptors.Mocking;
 import no.utgdev.sparkly.annotations.interceptors.ProxyAnnotation;
-import no.utgdev.sparkly.factories.ProxyFactory;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 
@@ -19,14 +19,14 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 public class ProxyChainUtils {
     final static Logger logger = getLogger(ProxyChainUtils.class);
-    private static Map<Class<? extends Annotation>, ProxyFactory> annotations;
+    private static Map<Class<? extends Annotation>, ProxyFactory> proxyFactoryMap;
 
-    public static ProxyChain createProxyChainFromAnnotations(Class aClass, Method m) {
+    public static ProxyChain createProxyChainFromAnnotations(Object instance, Method m) {
         try {
             checkForAnnotations();
-            List<Class<?extends Annotation>> present = findAnnotations(aClass, m);
+            List<ProxySetup> instanceAnnotations = findAnnotations(instance, m);
             ProxyChain pc = ProxyChain.start();
-            present.stream().forEach((a) -> pc.with(annotations.get(a)));
+            instanceAnnotations.stream().forEach(pc::with);
             return pc;
         } catch (IllegalAccessException | InstantiationException e) {
             e.printStackTrace();
@@ -34,24 +34,38 @@ public class ProxyChainUtils {
         return new ProxyChain();
     }
 
-    private static List<Class<? extends Annotation>> findAnnotations(Class aClass, Method m) {
-        List<Class<? extends Annotation>> present = new ArrayList<>();
-        for (Entry<Class<? extends Annotation>, ProxyFactory> entry : annotations.entrySet()) {
-            Class<? extends Annotation> annotation = entry.getKey();
+    private static List<ProxySetup> findAnnotations(Object instance, Method m) {
+        Class instanceClass = instance.getClass();
+        List<ProxySetup> present = new ArrayList<>();
 
-            if (aClass.isAnnotationPresent(annotation)) {
-                present.add(annotation);
+        for (Entry<Class<? extends Annotation>, ProxyFactory> entry : proxyFactoryMap.entrySet()) {
+            Class<? extends Annotation> proxyFactoryAnnotation = entry.getKey();
+
+
+            if (instanceClass.isAnnotationPresent(proxyFactoryAnnotation)) {
+                ProxyConfiguration configurationClass = getConfigurationClass(instance, proxyFactoryAnnotation);
+                present.add(new ProxySetup(proxyFactoryMap.get(proxyFactoryAnnotation), configurationClass));
             }
-            if (m.isAnnotationPresent(annotation)) {
-                present.add(annotation);
+            if (m.isAnnotationPresent(proxyFactoryAnnotation)) {
+                present.add(new ProxySetup(proxyFactoryMap.get(proxyFactoryAnnotation), null));
             }
         }
         return present;
     }
 
+    private static ProxyConfiguration getConfigurationClass(Object instance, Class<? extends Annotation> annotation) {
+        try {
+            annotation.getDeclaredMethod("configuringClass", new Class[]{});
+            Class<? extends ProxyConfiguration> configurationClass = ((Mocking) instance.getClass().getAnnotation(annotation)).configuringClass();
+            return configurationClass.newInstance();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private static void checkForAnnotations() throws IllegalAccessException, InstantiationException {
-        if (annotations == null) {
+        if (proxyFactoryMap == null) {
             String path = ProxyAnnotation.class.getPackage().getName();
             logger.debug("Search path " + path + " for proxy annotations.");
             Reflections reflection = new Reflections(path);
@@ -59,12 +73,13 @@ public class ProxyChainUtils {
             logger.debug("Found " + proxyAnnotations.size() + " proxy annotations.");
             logger.debug("  " + Arrays.toString(proxyAnnotations.toArray()));
 
-            annotations = new HashMap<>();
+            proxyFactoryMap = new HashMap<>();
             for (Class<?> annotationCls : proxyAnnotations) {
                 if (annotationCls.isAnnotation()) {
                     Class<Annotation> annotation = (Class<Annotation>) annotationCls;
-                    ProxyFactory pa = annotationCls.getAnnotation(ProxyAnnotation.class).implementingClass().newInstance();
-                    annotations.put(annotation, pa);
+                    ProxyAnnotation pa = annotationCls.getAnnotation(ProxyAnnotation.class);
+                    ProxyFactory pf = pa.implementingClass().newInstance();
+                    proxyFactoryMap.put(annotation, pf);
                 }
             }
         }
