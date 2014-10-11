@@ -1,26 +1,25 @@
 package no.utgdev.sparkly.proxyimpl.caching;
 
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.MethodInterceptor;
+import net.sf.cglib.proxy.MethodProxy;
 import no.utgdev.sparkly.proxies.ProxyFactory;
-import spark.Route;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 
 import static java.util.Arrays.asList;
 
 public class CachingProxy implements ProxyFactory {
 
     @SuppressWarnings("unchecked")
-    public <T> T create(T instance, Class<T> type) {
-        return type.cast(Proxy.newProxyInstance(
-                CachingProxy.class.getClassLoader(),
-                new Class[]{Route.class},
-                new CacherProxy(instance)
-        ));
+    public <T> T create(T instance, Class<T> type, Class[] argsCls, Object[] args) {
+        Enhancer enhancer = new Enhancer();
+        enhancer.setSuperclass(type);
+        enhancer.setCallback(new CacherProxy(instance));
+        return (T) enhancer.create(argsCls, args);
     }
 
-    static class CacherProxy implements InvocationHandler {
+    static class CacherProxy implements MethodInterceptor {
         private Object instance;
         private final Cache cache;
 
@@ -30,7 +29,7 @@ public class CachingProxy implements ProxyFactory {
         }
 
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
             String methodName = method.getName();
             String argsString = createStringFromArgs(args);
             HashcodeEquals he = createHashcodeEqualsWrapper(methodName, argsString);
@@ -38,7 +37,7 @@ public class CachingProxy implements ProxyFactory {
             Object o = cache.get(he);
             if (o != null) {
                 return o;
-            }else {
+            } else {
                 o = method.invoke(instance, args);
                 cache.put(he, o);
             }
@@ -52,7 +51,7 @@ public class CachingProxy implements ProxyFactory {
                     return asList(args)
                             .stream()
                             .map(Object::hashCode)
-                            .reduce((a, b) -> a+b)
+                            .reduce((a, b) -> a + b)
                             .get();
                 }
             };

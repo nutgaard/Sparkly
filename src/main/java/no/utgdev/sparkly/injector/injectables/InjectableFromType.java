@@ -2,21 +2,24 @@ package no.utgdev.sparkly.injector.injectables;
 
 import no.utgdev.sparkly.injector.InjectorHierarchy;
 import no.utgdev.sparkly.injector.exceptions.CouldNotInitializeException;
+import no.utgdev.sparkly.proxies.ProxyChain;
+import no.utgdev.sparkly.proxies.ProxyChainUtils;
 
 import javax.inject.Inject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 
-public class InjectableFromType extends AbstractInjectable {
-    private Class<?> cls;
+public class InjectableFromType<T> extends AbstractInjectable {
+    private Class<T> cls;
     private List<ClassFieldPair> neededInjectables = new ArrayList<>();
 
-    public InjectableFromType(Class<?> cls) {
+    public InjectableFromType(Class<T> cls) {
         super();
         this.cls = cls;
         findNeededInjectables();
@@ -42,12 +45,16 @@ public class InjectableFromType extends AbstractInjectable {
     @Override
     public Object initialize() {
         verifyPresenceOfInjectables();
-        Object obj = initializeObject();
-        injectInjectables(obj);
+        T obj = initializeObject();
         return obj;
     }
 
-    private void injectInjectables(Object obj) {
+    private T createProxyLayers(T obj, ConstructorArgumentsTriplet construct) {
+        ProxyChain pc = ProxyChainUtils.createProxyChainFromAnnotations(obj);
+        return pc.build(obj, this.cls, construct.argsCls, construct.args);
+    }
+
+    private void injectInjectables(T obj) {
         try {
             InjectorHierarchy ih = InjectorHierarchy.getInstance();
             for (ClassFieldPair needInjectable : neededInjectables) {
@@ -60,7 +67,7 @@ public class InjectableFromType extends AbstractInjectable {
                 field.set(obj, value);
             }
         } catch (NoSuchFieldException e) {
-            throw new CouldNotInitializeException("Could not find field: ",e);
+            throw new CouldNotInitializeException("Could not find field: ", e);
         } catch (IllegalAccessException e) {
             throw new CouldNotInitializeException("Could not set value to field: ", e);
         } catch (IllegalArgumentException e) {
@@ -77,24 +84,32 @@ public class InjectableFromType extends AbstractInjectable {
         }
     }
 
-    private Object initializeObject() {
+    private T initializeObject() {
+        T obj;
+        ConstructorArgumentsTriplet<T> construct;
         try {
-            return cls.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
+            construct = new ConstructorArgumentsTriplet<>(cls.getConstructor(new Class[0]), new Class[0], new Object[0]);
+        } catch (NoSuchMethodException e) {
             Constructor<?>[] constructors = cls.getConstructors();
+            construct = firstConstructorSupported(constructors);
 
-            Object valid = firstConstructorSupported(constructors);
-            if (valid == null) {
+            if (construct == null) {
                 throw new CouldNotInitializeException(cls, e);
-            } else {
-                return valid;
             }
+        }
+        try {
+            obj = cls.cast(construct.constructor.newInstance(construct.args));
+            injectInjectables(obj);
+            obj = createProxyLayers(obj, construct);
+            return obj;
+        } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
+            throw new CouldNotInitializeException(cls, e);
         }
     }
 
-    private Object firstConstructorSupported(Constructor<?>[] constructors) {
+    private ConstructorArgumentsTriplet<T> firstConstructorSupported(Constructor<?>[] constructors) {
         for (Constructor constructor : constructors) {
-            Object obj = isSupportedInstance(constructor);
+            ConstructorArgumentsTriplet<T> obj = isSupportedInstance(constructor);
             if (obj != null) {
                 return obj;
             }
@@ -102,23 +117,35 @@ public class InjectableFromType extends AbstractInjectable {
         return null;
     }
 
-    private static Object isSupportedInstance(Constructor constructor) {
+    private static <T> ConstructorArgumentsTriplet<T> isSupportedInstance(Constructor constructor) {
         try {
             Class[] parameterTypes = constructor.getParameterTypes();
             Object[] paramInstances = createParamInstances(parameterTypes);
-            return constructor.newInstance(paramInstances);
+            return new ConstructorArgumentsTriplet<>(constructor, parameterTypes, paramInstances);
         } catch (Throwable e) {
             return null;
         }
     }
 
-    private class ClassFieldPair {
+    static class ClassFieldPair {
         public final Class<?> cls;
         public final Field field;
 
         private ClassFieldPair(Class<?> cls, Field field) {
             this.cls = cls;
             this.field = field;
+        }
+    }
+
+    static class ConstructorArgumentsTriplet<T> {
+        public final Constructor<T> constructor;
+        public final Class[] argsCls;
+        public final Object[] args;
+
+        private ConstructorArgumentsTriplet(Constructor constructor, Class[] argsCls, Object[] args) {
+            this.constructor = constructor;
+            this.argsCls = argsCls;
+            this.args = args;
         }
     }
 }

@@ -2,15 +2,12 @@ package no.utgdev.sparkly;
 
 import no.utgdev.sparkly.annotations.wsrs.*;
 import no.utgdev.sparkly.injector.InjectorHierarchy;
-import no.utgdev.sparkly.proxies.ProxyChain;
-import no.utgdev.sparkly.proxies.ProxyChainUtils;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import spark.Route;
 import spark.Spark;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -60,22 +57,15 @@ public class Sparkly {
         return asList(instance.getClass().getMethods())
                 .stream()
                 .filter((m) -> m.isAnnotationPresent(annotation))
-                .map((m) -> new Object[]{
-                        m,
-                        (Route) (request, response) -> {
+                .map((m) ->
+                        (request, response) -> {
                             try {
                                 return m.invoke(instance, request, response);
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 throw new RuntimeException(e);
                             }
-                        }})
-                .map((mp) -> {
-                    Method m = (Method) mp[0];
-                    Route route = (Route) mp[1];
-                    ProxyChain pc = ProxyChainUtils.createProxyChainFromAnnotations(instance, m);
-                    return pc.build(route, Route.class);
-                });
+                        });
     }
 
 }

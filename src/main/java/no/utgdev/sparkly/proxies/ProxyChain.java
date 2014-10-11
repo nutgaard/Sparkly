@@ -16,11 +16,11 @@ public class ProxyChain {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T build(T instance, Class<T> type) {
+    public <T> T build(T instance, Class<T> type, Class[] argsCls, Object[] args) {
         try {
             T proxy = instance;
             for (ProxySetup ps : handlers) {
-                T obj = ps.pf.create(proxy, type);
+                T obj = ps.pf.create(proxy, type, argsCls, args);
                 if (ps.pc != null) {
                     ps.pc.configure(obj);
                 }

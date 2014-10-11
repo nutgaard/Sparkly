@@ -37,10 +37,6 @@ public class AnnotationProcessorRegistry {
 
 
     public AnnotationProcessor getForAnnotation(Class<? extends Annotation> key) {
-        AnnotationProcessor processor = this.registry.get(key);
-        if (processor == null) {
-            return null;
-        }
-        return processor;
+        return this.registry.get(key);
     }
 }

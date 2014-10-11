@@ -7,13 +7,7 @@ import org.reflections.Reflections;
 import org.slf4j.Logger;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Map.Entry;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -22,10 +16,10 @@ public class ProxyChainUtils {
     final static Logger logger = getLogger(ProxyChainUtils.class);
     private static Map<Class<? extends Annotation>, ProxyFactory> proxyFactoryMap;
 
-    public static ProxyChain createProxyChainFromAnnotations(Object instance, Method m) {
+    public static ProxyChain createProxyChainFromAnnotations(Object instance) {
         try {
             checkForAnnotations();
-            List<ProxySetup> instanceAnnotations = findAnnotations(instance, m);
+            List<ProxySetup> instanceAnnotations = findAnnotations(instance);
             ProxyChain pc = ProxyChain.start();
             instanceAnnotations.stream().forEach(pc::with);
             return pc;
@@ -35,7 +29,7 @@ public class ProxyChainUtils {
         return new ProxyChain();
     }
 
-    private static List<ProxySetup> findAnnotations(Object instance, Method m) {
+    private static List<ProxySetup> findAnnotations(Object instance) {
         Class instanceClass = instance.getClass();
         List<ProxySetup> present = new ArrayList<>();
         AnnotationProcessorRegistry registry = AnnotationProcessorRegistry.getInstance();
@@ -49,10 +43,7 @@ public class ProxyChainUtils {
                 if (processor != null && proxyFactoryAnnotation.equals(processor.accepts())) {
                     configurator = processor.process(instance.getClass().getAnnotation(proxyFactoryAnnotation));
                 }
-                present.add(new ProxySetup(proxyFactoryMap.get(proxyFactoryAnnotation), configurator));
-            }
-            if (m.isAnnotationPresent(proxyFactoryAnnotation)) {
-                present.add(new ProxySetup(proxyFactoryMap.get(proxyFactoryAnnotation), null));
+                present.add(new ProxySetup(entry.getValue(), configurator));
             }
         }
         return present;

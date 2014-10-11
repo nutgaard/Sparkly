@@ -1,12 +1,12 @@
 package no.utgdev.sparkly.proxyimpl.logging;
 
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.MethodInterceptor;
+import net.sf.cglib.proxy.MethodProxy;
 import no.utgdev.sparkly.proxies.ProxyFactory;
 import org.slf4j.Logger;
-import spark.Route;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.Arrays;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -15,14 +15,14 @@ public class LoggingProxy implements ProxyFactory {
     final static Logger logger = getLogger(LoggingProxy.class);
 
     @SuppressWarnings("unchecked")
-    public <T> T create(T instance, Class<T> type) {
-        return (T) Proxy.newProxyInstance(
-                LoggingProxy.class.getClassLoader(),
-                new Class[]{Route.class},
-                new LoggerProxy(instance));
+    public <T> T create(T instance, Class<T> type, Class[] argsCls, Object[] args) {
+        Enhancer enhancer = new Enhancer();
+        enhancer.setSuperclass(type);
+        enhancer.setCallback(new LoggerProxy(instance));
+        return (T) enhancer.create(argsCls, args);
     }
 
-    static class LoggerProxy implements InvocationHandler {
+    static class LoggerProxy implements MethodInterceptor {
         private Object instance;
 
         LoggerProxy(Object instance) {
@@ -30,7 +30,7 @@ public class LoggingProxy implements ProxyFactory {
         }
 
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
             logger.info(String.format("START %s::%s(%s)",
                             instance.getClass().getName(),
                             method.getName(),
