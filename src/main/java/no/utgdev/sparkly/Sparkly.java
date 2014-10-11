@@ -27,12 +27,12 @@ public class Sparkly {
 
     public Sparkly(String scanPackage) {
         logger.debug("Scanning package: " + scanPackage);
-        this.startInjector();
+        this.startInjector(scanPackage);
         this.createRoutes(scanPackage);
     }
 
-    private void startInjector() {
-        InjectorHierarchy.getInstance().setup();
+    private void startInjector(String scanPackage) {
+        InjectorHierarchy.getInstance().setup(scanPackage);
     }
 
     private void createRoutes(String scanPackage) {

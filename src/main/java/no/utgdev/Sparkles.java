@@ -10,7 +10,7 @@ public class Sparkles {
 
 
     public static void main(String[] args) {
-        String scanPackage = "no.utgdev.page";
+        String scanPackage = "";
         logger.info("Starting route scanner...");
         long start = System.nanoTime();
         Sparkly.start(scanPackage);
