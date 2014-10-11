@@ -1,6 +1,7 @@
 package no.utgdev.sparkly.injector.injectables;
 
 import no.utgdev.sparkly.injector.InjectorHierarchy;
+import no.utgdev.sparkly.injector.ProxyUnwrapper;
 import no.utgdev.sparkly.injector.exceptions.CouldNotInitializeException;
 import no.utgdev.sparkly.proxies.ProxyChain;
 import no.utgdev.sparkly.proxies.ProxyChainUtils;
@@ -43,10 +44,9 @@ public class InjectableFromType<T> extends AbstractInjectable {
     }
 
     @Override
-    public Object initialize() {
+    public ProxyUnwrapper initialize() {
         verifyPresenceOfInjectables();
-        T obj = initializeObject();
-        return obj;
+        return initializeObject();
     }
 
     private T createProxyLayers(T obj, ConstructorArgumentsTriplet construct) {
@@ -62,9 +62,9 @@ public class InjectableFromType<T> extends AbstractInjectable {
                 Field field = obj.getClass().getDeclaredField(fieldName);
                 field.setAccessible(true);
 
-                Object value = ih.getInjectable(needInjectable.cls).get();
+                ProxyUnwrapper value = ih.getInjectable(needInjectable.cls).get();
 
-                field.set(obj, value);
+                field.set(obj, value.proxy);
             }
         } catch (NoSuchFieldException e) {
             throw new CouldNotInitializeException("Could not find field: ", e);
@@ -84,7 +84,7 @@ public class InjectableFromType<T> extends AbstractInjectable {
         }
     }
 
-    private T initializeObject() {
+    private ProxyUnwrapper initializeObject() {
         T obj;
         ConstructorArgumentsTriplet<T> construct;
         try {
@@ -100,8 +100,8 @@ public class InjectableFromType<T> extends AbstractInjectable {
         try {
             obj = cls.cast(construct.constructor.newInstance(construct.args));
             injectInjectables(obj);
-            obj = createProxyLayers(obj, construct);
-            return obj;
+            T proxy = createProxyLayers(obj, construct);
+            return new ProxyUnwrapper(proxy, obj);
         } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
             throw new CouldNotInitializeException(cls, e);
         }

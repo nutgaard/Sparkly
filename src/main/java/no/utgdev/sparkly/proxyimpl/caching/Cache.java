@@ -26,7 +26,7 @@ public class Cache<S extends HashcodeEquals, T> {
     }
 
     private Map<Integer,Element> nativecache = new HashMap<>();
-    private long expirationTime = 10_000;
+    private long expirationTime = 1000;
 
     private Cache() {
     }

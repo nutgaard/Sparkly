@@ -1,6 +1,7 @@
 package no.utgdev.sparkly.injector.injectables;
 
 import no.utgdev.sparkly.injector.InjectorHierarchy;
+import no.utgdev.sparkly.injector.ProxyUnwrapper;
 import no.utgdev.sparkly.injector.exceptions.CouldNotInitializeException;
 
 import java.lang.reflect.InvocationTargetException;
@@ -29,18 +30,19 @@ public class InjectableFromMethod extends AbstractInjectable {
     }
 
     @Override
-    public Object initialize() {
+    public ProxyUnwrapper initialize() {
         InjectorHierarchy om = InjectorHierarchy.getInstance();
         Class<?>[] paramsCls = method.getParameterTypes();
         Object[] params = createParamInstances(paramsCls);
 
-        Optional<Object> declaringClass = om.getInjectable(cls);
+        Optional<ProxyUnwrapper> declaringClass = om.getInjectable(cls);
         if (!declaringClass.isPresent()) {
             throw new CouldNotInitializeException("Could not find any declaring class for " + method);
         }
 
         try {
-            return method.invoke(declaringClass.get(), params);
+            Object object = method.invoke(declaringClass.get().proxy, params);
+            return new ProxyUnwrapper(object, object);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new CouldNotInitializeException("Invokation of method failed: " + method + "\n\r" + Arrays.toString(params));
         }

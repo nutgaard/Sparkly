@@ -28,7 +28,7 @@ public class InjectorHierarchy {
     public static final Function<Class<?>, AbstractInjectable> INJECTABLE_FROM_TYPE_FUNCTION = InjectableFromType::new;
 
     private static InjectorHierarchy instance = new InjectorHierarchy();
-    private Map<Class<?>, Object> objectMap = new HashMap<>();
+    private Map<Class<?>, ProxyUnwrapper> objectMap = new HashMap<>();
 
     public static InjectorHierarchy getInstance() {
         return instance;
@@ -46,8 +46,13 @@ public class InjectorHierarchy {
         setup("");
     }
 
-    public Optional<Object> getInjectable(Class<?> ai) {
-        return Optional.ofNullable(objectMap.get(ai));
+    public Optional<ProxyUnwrapper> getInjectable(Class<?> ai) {
+        for (Map.Entry<Class<?>, ProxyUnwrapper> entry : objectMap.entrySet()) {
+            if (ai.equals(entry.getKey())) {
+                return Optional.of(entry.getValue());
+            }
+        }
+        return Optional.empty();
     }
 
     private void findAndInitializeInjectInstances(String scanPackage) {
@@ -124,7 +129,7 @@ public class InjectorHierarchy {
             success.clear();
             for (AbstractInjectable injectable : classes) {
                 try {
-                    Object obj = injectable.initialize();
+                    ProxyUnwrapper obj = injectable.initialize();
                     objectMap.put(injectable.getReturningClass(), obj);
                     success.add(injectable);
                 } catch (Exception ignored) {

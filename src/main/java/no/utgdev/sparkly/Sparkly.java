@@ -2,6 +2,7 @@ package no.utgdev.sparkly;
 
 import no.utgdev.sparkly.annotations.wsrs.*;
 import no.utgdev.sparkly.injector.InjectorHierarchy;
+import no.utgdev.sparkly.injector.ProxyUnwrapper;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import spark.Route;
@@ -41,7 +42,7 @@ public class Sparkly {
             final String uri = aClass.getAnnotation(Page.class).value();
             final InjectorHierarchy ih = InjectorHierarchy.getInstance();
             try {
-                final Object instance = ih.getInjectable(aClass).get();
+                final ProxyUnwrapper instance = ih.getInjectable(aClass).get();
 
                 createRoutesByType(instance, Get.class).forEach((r) -> Spark.get(uri, r));
                 createRoutesByType(instance, Post.class).forEach((r) -> Spark.post(uri, r));
@@ -53,14 +54,15 @@ public class Sparkly {
         });
     }
 
-    private Stream<Route> createRoutesByType(Object instance, Class<? extends Annotation> annotation) {
-        return asList(instance.getClass().getMethods())
+    private Stream<Route> createRoutesByType(ProxyUnwrapper instance, Class<? extends Annotation> annotation) {
+        System.out.println("");
+        return asList(instance.object.getClass().getMethods())
                 .stream()
                 .filter((m) -> m.isAnnotationPresent(annotation))
                 .map((m) ->
                         (request, response) -> {
                             try {
-                                return m.invoke(instance, request, response);
+                                return m.invoke(instance.proxy, request, response);
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 throw new RuntimeException(e);

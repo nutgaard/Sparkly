@@ -15,7 +15,6 @@ public class TestPage {
 
     @Get
     public Object handle(Request request, Response response) {
-        System.out.println("DAO:::" + dao);
         return dao.getResp();
     }
 }
