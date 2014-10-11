@@ -1,6 +1,7 @@
 package no.utgdev.sparkly.injector;
 
 import no.utgdev.sparkly.annotations.Injectable;
+import no.utgdev.sparkly.annotations.wsrs.Page;
 import no.utgdev.sparkly.injector.exceptions.CouldNotFindInjectableException;
 import no.utgdev.sparkly.injector.injectables.AbstractInjectable;
 import no.utgdev.sparkly.injector.injectables.InjectableFromMethod;
@@ -86,6 +87,7 @@ public class InjectorHierarchy {
         List<AbstractInjectable> injectables = new ArrayList<>();
         List<AbstractInjectable> methods = createInjectable(reflections.getMethodsAnnotatedWith(Injectable.class), INJECTABLE_FROM_METHOD_FUNCTION);
         List<AbstractInjectable> types = createInjectable(reflections.getTypesAnnotatedWith(Injectable.class), INJECTABLE_FROM_TYPE_FUNCTION);
+        List<AbstractInjectable> pages = createInjectable(reflections.getTypesAnnotatedWith(Page.class), INJECTABLE_FROM_TYPE_FUNCTION);
         logger.debug("Scanning for providers complete, found " + types.size() + " classes and " + methods.size() + " methods.");
 
         Set<AbstractInjectable> declaringClasses = methods
@@ -96,8 +98,9 @@ public class InjectorHierarchy {
 
         logger.debug("Adding " + declaringClasses.size() + " declaring classes.");
         injectables.addAll(types);
-        injectables.addAll(methods);
         injectables.addAll(declaringClasses);
+        injectables.addAll(methods);
+        injectables.addAll(pages);
 
 
         logger.debug("Initializing provider objects...");

@@ -42,8 +42,9 @@ public class Sparkly {
         logger.debug("  " + Arrays.toString(annotatedClasses.toArray()));
         annotatedClasses.forEach(aClass -> {
             final String uri = aClass.getAnnotation(Page.class).value();
+            final InjectorHierarchy ih = InjectorHierarchy.getInstance();
             try {
-                final Object instance = aClass.getConstructors()[0].newInstance();
+                final Object instance = ih.getInjectable(aClass).get();
 
                 createRoutesByType(instance, Get.class).forEach((r) -> Spark.get(uri, r));
                 createRoutesByType(instance, Post.class).forEach((r) -> Spark.post(uri, r));

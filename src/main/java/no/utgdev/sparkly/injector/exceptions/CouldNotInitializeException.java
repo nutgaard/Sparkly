@@ -12,4 +12,8 @@ public class CouldNotInitializeException extends RuntimeException {
     public CouldNotInitializeException(String s) {
         super(s);
     }
+
+    public CouldNotInitializeException(String s, Exception e) {
+        super(s, e);
+    }
 }
