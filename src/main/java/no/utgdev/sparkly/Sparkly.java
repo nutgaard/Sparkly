@@ -1,10 +1,7 @@
 package no.utgdev.sparkly;
 
-import no.utgdev.sparkly.annotations.wsrs.Delete;
-import no.utgdev.sparkly.annotations.wsrs.Get;
-import no.utgdev.sparkly.annotations.wsrs.Page;
-import no.utgdev.sparkly.annotations.wsrs.Post;
-import no.utgdev.sparkly.annotations.wsrs.Put;
+import no.utgdev.sparkly.annotations.wsrs.*;
+import no.utgdev.sparkly.injector.InjectorHierarchy;
 import no.utgdev.sparkly.proxies.ProxyChain;
 import no.utgdev.sparkly.proxies.ProxyChainUtils;
 import org.reflections.Reflections;
@@ -21,19 +18,28 @@ import java.util.stream.Stream;
 import static java.util.Arrays.asList;
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class RouteScanner {
-    final static Logger logger = getLogger(RouteScanner.class);
-    private final Reflections reflections;
+public class Sparkly {
+    final static Logger logger = getLogger(Sparkly.class);
 
-    public RouteScanner(String scanPackage) {
-        logger.debug("Scanning package: "+scanPackage);
-        this.reflections = new Reflections(scanPackage);
+    public static Sparkly start(String scanPackage) {
+        return new Sparkly(scanPackage);
     }
 
-    public void createRoutes() {
+    public Sparkly(String scanPackage) {
+        logger.debug("Scanning package: " + scanPackage);
+        this.startInjector();
+        this.createRoutes(scanPackage);
+    }
+
+    private void startInjector() {
+        InjectorHierarchy.getInstance().setup();
+    }
+
+    private void createRoutes(String scanPackage) {
+        Reflections reflections = new Reflections(scanPackage);
         Set<Class<?>> annotatedClasses = reflections.getTypesAnnotatedWith(Page.class);
-        logger.debug("Found "+annotatedClasses.size()+" classes matching Page.class");
-        logger.debug("  "+ Arrays.toString(annotatedClasses.toArray()));
+        logger.debug("Found " + annotatedClasses.size() + " classes matching Page.class");
+        logger.debug("  " + Arrays.toString(annotatedClasses.toArray()));
         annotatedClasses.forEach(aClass -> {
             final String uri = aClass.getAnnotation(Page.class).value();
             try {
@@ -60,8 +66,8 @@ public class RouteScanner {
                                 return m.invoke(instance, request, response);
                             } catch (Exception e) {
                                 e.printStackTrace();
+                                throw new RuntimeException(e);
                             }
-                            return "";
                         }})
                 .map((mp) -> {
                     Method m = (Method) mp[0];

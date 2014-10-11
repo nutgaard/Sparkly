@@ -1,6 +1,6 @@
 package no.utgdev;
 
-import no.utgdev.sparkly.RouteScanner;
+import no.utgdev.sparkly.Sparkly;
 import org.slf4j.Logger;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -13,8 +13,7 @@ public class Sparkles {
         String scanPackage = "no.utgdev.page";
         logger.info("Starting route scanner...");
         long start = System.nanoTime();
-        RouteScanner rs = new RouteScanner(scanPackage);
-        rs.createRoutes();
+        Sparkly.start(scanPackage);
         logger.info("Route scanner completed in " + (System.nanoTime() - start) + "ns");
     }
 }

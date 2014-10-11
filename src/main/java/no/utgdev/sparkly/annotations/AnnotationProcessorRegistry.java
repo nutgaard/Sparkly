@@ -31,7 +31,6 @@ public class AnnotationProcessorRegistry {
                         e.printStackTrace();
                     }
                 });
-        System.out.println();
     }
 
     private Map<Class<? extends Annotation>, AnnotationProcessor> registry = new HashMap<>();
