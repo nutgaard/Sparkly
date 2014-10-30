@@ -1,5 +1,3 @@
-package no.utgdev;
-
 import no.utgdev.sparkly.Sparkly;
 import org.slf4j.Logger;
 

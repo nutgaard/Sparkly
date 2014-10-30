@@ -1,4 +1,4 @@
-package no.utgdev.page;
+package page;
 
 import no.utgdev.sparkly.proxies.ProxyConfiguration;
 import org.mockito.internal.util.MockUtil;

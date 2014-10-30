@@ -1,4 +1,4 @@
-package no.utgdev.page;
+package page;
 
 import no.utgdev.sparkly.annotations.Injectable;
 import no.utgdev.sparkly.proxyimpl.caching.Caching;
